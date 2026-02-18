@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 type FashionFilm = {
@@ -98,6 +98,8 @@ const translations = {
     loginError: 'Usuario o clave incorrectos',
     loginExito: '¡Hola de nuevo, {username}!',
     registrando: 'Registrando usuario...',
+    validarClave: 'La clave debe tener al menos 5 caracteres, con números y letras sin signos.',
+    validarNombre: 'El nombre no puede ser "admin", no debe tener signos y solo se permiten uno o dos nombres.',
     noUsuarioId: 'No se encontró usuarioId. Vuelve a iniciar sesión.',
     noLink: 'Este fashion film no tiene link.',
     linkInvalido: 'El link no parece ser de YouTube o Vimeo (o no se pudo convertir a embed).',
@@ -156,6 +158,8 @@ const translations = {
     loginError: 'Incorrect username or password',
     loginExito: 'Welcome back, {username}!',
     registrando: 'Registering user...',
+    validarClave: 'The password must be at least 5 characters long, with numbers and letters without signs.',
+    validarNombre: 'The username cannot be "admin", must not have signs and only one or two names are allowed.',
     noUsuarioId: 'User ID not found. Please log in again.',
     noLink: 'This fashion film has no link.',
     linkInvalido: 'The link does not seem to be from YouTube or Vimeo (or could not be converted to embed).',
@@ -180,11 +184,16 @@ export default function LoginPage() {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [userError, setUserError] = useState(false)
+  const [passError, setPassError] = useState(false)
   const [mensaje, setMensaje] = useState('')
   const [mostrandoBienvenida, setMostrandoBienvenida] = useState(false)
   const [estaLogueado, setEstaLogueado] = useState(false)
 
   const [usuarioId, setUsuarioId] = useState<string | null>(null)
+
+  const [isMobile, setIsMobile] = useState(false)
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null)
 
   const [films, setFilms] = useState<FashionFilm[]>([])
   const [cargandoFilms, setCargandoFilms] = useState(false)
@@ -220,6 +229,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const handleResize = () => setIsMobile(window.innerWidth < 768)
+      handleResize()
+      window.addEventListener('resize', handleResize)
+
       const usuarioGuardado = localStorage.getItem('usuarioLogueado')
       const usuarioIdGuardado = localStorage.getItem('usuarioId')
 
@@ -229,6 +242,7 @@ export default function LoginPage() {
       if (usuarioGuardado && usuarioIdGuardado) {
         setEstaLogueado(true)
       }
+      return () => window.removeEventListener('resize', handleResize)
     }
   }, [])
 
@@ -280,6 +294,34 @@ export default function LoginPage() {
   }, [estaLogueado, usuarioId, selectedFilmId])
 
   const handleRegister = async () => {
+    // Limpiar estados de error previos
+    setUserError(false)
+    setPassError(false)
+
+    // Validaciones
+    // Clave: mínimo 5 caracteres, números y letras sin signos
+    const regexClave = /^[a-zA-Z0-9]{5,}$/
+    if (!regexClave.test(password)) {
+      setMensaje(t.validarClave)
+      setPassError(true)
+      return
+    }
+
+    // Nombre de usuario: no "admin", no signos, solo uno o dos nombres (letras)
+    const usernameLower = username.toLowerCase()
+    if (usernameLower === 'admin') {
+      setMensaje(t.validarNombre)
+      setUserError(true)
+      return
+    }
+    // Permite uno o dos nombres, solo letras (incluyendo ñ y tildes), separados por un espacio opcional
+    const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+( [a-zA-ZáéíóúÁÉÍÓÚñÑ]+)?$/
+    if (!regexNombre.test(username)) {
+      setMensaje(t.validarNombre)
+      setUserError(true)
+      return
+    }
+
     setMensaje(t.registrando)
 
     const { error } = await supabase
@@ -300,23 +342,42 @@ export default function LoginPage() {
     e.preventDefault()
     setMensaje(t.verificando)
 
-    const { data, error } = await supabase
+    // Reiniciar estados de error previos
+    setUserError(false)
+    setPassError(false)
+
+    // Buscar por nombre primero para identificar con precisión el campo incorrecto
+    const { data: userByName, error: errorByName } = await supabase
       .from('Usuarios')
       .select('usuario_id, nombre, clave')
       .eq('nombre', username)
-      .eq('clave', password)
-      .single()
+      .maybeSingle()
 
-    if (error || !data) {
-      setMensaje(t.loginError)
-    } else {
-      localStorage.setItem('usuarioLogueado', data.nombre)
-      localStorage.setItem('usuarioId', data.usuario_id)
-
-      setUsuarioId(data.usuario_id)
-      setMensaje(t.loginExito.replace('{username}', data.nombre))
-      setEstaLogueado(true)
+    if (errorByName || !userByName) {
+      // Usuario no existe o error: marcamos usuario como incorrecto y explicamos cómo debe ser
+      setUserError(true)
+      setPassError(false)
+      setMensaje(t.validarNombre)
+      return
     }
+
+    if (userByName.clave !== password) {
+      // Contraseña incorrecta: marcamos clave y explicamos requisitos
+      setUserError(false)
+      setPassError(true)
+      setMensaje(t.validarClave)
+      return
+    }
+
+    // Éxito
+    setUserError(false)
+    setPassError(false)
+    localStorage.setItem('usuarioLogueado', userByName.nombre)
+    localStorage.setItem('usuarioId', userByName.usuario_id)
+
+    setUsuarioId(userByName.usuario_id)
+    setMensaje(t.loginExito.replace('{username}', userByName.nombre))
+    setEstaLogueado(true)
   }
 
   const cerrarSesion = () => {
@@ -556,13 +617,13 @@ export default function LoginPage() {
     })
 
     return (
-      <div style={{ ...cardStyle, width: 'min(1000px, 95vw)', position: 'relative' }}>
+      <div style={{ ...cardStyle, width: isMobile ? '95vw' : 'min(1000px, 95vw)', position: 'relative', padding: isMobile ? '15px' : '30px' }}>
         <button
           onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
           style={{
             position: 'absolute',
-            top: 20,
-            right: 20,
+            top: isMobile ? 10 : 20,
+            right: isMobile ? 10 : 20,
             backgroundColor: colors.secondary,
             color: 'white',
             border: 'none',
@@ -592,7 +653,7 @@ export default function LoginPage() {
             marginBottom: 12,
           }}
         >
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
             <button
               onClick={onClickReproducir}
               style={{
@@ -600,7 +661,7 @@ export default function LoginPage() {
                 backgroundColor: selectedFilm && embedUrl ? colors.primary : colors.disabled,
                 color: selectedFilm && embedUrl ? colors.textOnPrimary : 'white',
                 cursor: selectedFilm && embedUrl ? 'pointer' : 'not-allowed',
-                width: 'auto',
+                width: isMobile ? '100%' : 'auto',
                 paddingInline: 16,
               }}
               disabled={!selectedFilm || !embedUrl}
@@ -615,7 +676,7 @@ export default function LoginPage() {
                 ...buttonStyle,
                 backgroundColor: selectedFilm ? (favoritoSeleccionado ? colors.danger : colors.secondary) : colors.disabled,
                 cursor: selectedFilm ? 'pointer' : 'not-allowed',
-                width: 'auto',
+                width: isMobile ? '100%' : 'auto',
                 paddingInline: 16,
               }}
               disabled={!selectedFilm}
@@ -632,7 +693,7 @@ export default function LoginPage() {
                 setFavoritoSeleccionado(false)
                 if (next) await cargarMisFavoritos()
               }}
-              style={{ ...buttonStyle, width: 'auto', paddingInline: 16, backgroundColor: colors.secondary }}
+              style={{ ...buttonStyle, width: isMobile ? '100%' : 'auto', paddingInline: 16, backgroundColor: colors.secondary }}
               type="button"
             >
               {viendoFavoritos ? t.volverTodos : t.verFavoritos}
@@ -642,7 +703,7 @@ export default function LoginPage() {
               onClick={() => setMostrandoFormulario(!mostrandoFormulario)}
               style={{
                 ...buttonStyle,
-                width: 'auto',
+                width: isMobile ? '100%' : 'auto',
                 paddingInline: 16,
                 backgroundColor: mostrandoFormulario ? colors.danger : colors.success
               }}
@@ -653,7 +714,7 @@ export default function LoginPage() {
 
             <button
               onClick={cerrarSesion}
-              style={{ ...buttonStyle, width: 'auto', paddingInline: 16, backgroundColor: colors.dark }}
+              style={{ ...buttonStyle, width: isMobile ? '100%' : 'auto', paddingInline: 16, backgroundColor: colors.dark }}
               type="button"
             >
               {t.cerrarSesion}
@@ -765,8 +826,8 @@ export default function LoginPage() {
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h2 style={{ margin: 0, fontFamily: 'Century Gothic, sans-serif', color: colors.dark }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', marginBottom: 12, flexDirection: isMobile ? 'column' : 'row', gap: 10 }}>
+          <h2 style={{ margin: 0, fontFamily: 'Century Gothic, sans-serif', color: colors.dark, fontSize: isMobile ? '1.2rem' : '1.5rem' }}>
             {viendoFavoritos ? t.misFavoritos : t.fashionFilms}
           </h2>
 
@@ -777,7 +838,7 @@ export default function LoginPage() {
             placeholder={t.buscarPlaceholder}
             style={{
               ...inputStyle,
-              width: '300px',
+              width: isMobile ? '100%' : '300px',
               padding: '8px 12px',
             }}
           />
@@ -793,35 +854,70 @@ export default function LoginPage() {
               <thead>
                 <tr>
                   <th style={thStyle}>{t.titulo}</th>
-                  <th style={thStyle}>{t.direccion}</th>
-                  <th style={thStyle}>{t.fechaPub}</th>
-                  <th style={thStyle}>{t.duracion}</th>
+                  {!isMobile && (
+                    <>
+                      <th style={thStyle}>{t.direccion}</th>
+                      <th style={thStyle}>{t.fechaPub}</th>
+                      <th style={thStyle}>{t.duracion}</th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {listaFiltrada.map((f) => {
                   const isSelected = f.film_id === selectedFilmId
+                  const isExpanded = isMobile && expandedRowId === f.film_id
                   return (
-                    <tr
-                      key={f.film_id}
-                      onClick={() => setSelectedFilmId(f.film_id)}
-                      style={{
-                        background: isSelected ? '#eef5ff' : 'transparent',
-                        cursor: 'pointer',
-                      }}
-                      title={f.link ? 'Selecciona para activar Reproducir' : 'Sin link'}
-                    >
-                      <td style={tdStyle}>{f.titulo}</td>
-                      <td style={tdStyle}>{f.direccion}</td>
-                      <td style={tdStyle}>{f.fecha_publicacion ?? '-'}</td>
-                      <td style={tdStyle}>{f.duracion ?? '-'}</td>
-                    </tr>
+                    <React.Fragment key={f.film_id}>
+                      <tr
+                        onClick={() => {
+                          setSelectedFilmId(f.film_id)
+                          if (isMobile) {
+                            setExpandedRowId(expandedRowId === f.film_id ? null : f.film_id)
+                          }
+                        }}
+                        style={{
+                          background: isSelected ? '#eef5ff' : 'transparent',
+                          cursor: 'pointer',
+                        }}
+                        title={f.link ? 'Selecciona para activar Reproducir' : 'Sin link'}
+                      >
+                        <td style={tdStyle}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>{f.titulo}</span>
+                            {isMobile && (
+                              <span style={{ fontSize: '10px', color: '#888' }}>
+                                {isExpanded ? '▲' : '▼'}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        {!isMobile && (
+                          <>
+                            <td style={tdStyle}>{f.direccion}</td>
+                            <td style={tdStyle}>{f.fecha_publicacion ?? '-'}</td>
+                            <td style={tdStyle}>{f.duracion ?? '-'}</td>
+                          </>
+                        )}
+                      </tr>
+                      {isExpanded && (
+                        <tr style={{ background: '#f9f9f9' }}>
+                          <td colSpan={1} style={{ ...tdStyle, whiteSpace: 'normal', padding: '10px 20px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
+                              <div><strong>{t.direccion}:</strong> {f.direccion}</div>
+                              <div><strong>{t.fechaPub}:</strong> {f.fecha_publicacion ?? '-'}</div>
+                              <div><strong>{t.duracion}:</strong> {f.duracion ?? '-'}</div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   )
                 })}
 
                 {listaFiltrada.length === 0 && (
                   <tr>
-                    <td style={tdStyle} colSpan={4}>
+                    <td style={tdStyle} colSpan={isMobile ? 1 : 4}>
                       {busqueda.trim()
                         ? t.noResultados
                         : viendoFavoritos
@@ -881,13 +977,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ ...cardStyle, position: 'relative' }}>
+    <div style={{ ...cardStyle, width: isMobile ? '90vw' : '350px', position: 'relative', padding: isMobile ? '20px' : '30px' }}>
       <button
         onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
         style={{
           position: 'absolute',
-          top: 20,
-          right: 20,
+          top: isMobile ? 10 : 20,
+          right: isMobile ? 10 : 20,
           backgroundColor: colors.secondary,
           color: 'white',
           border: 'none',
@@ -910,8 +1006,15 @@ export default function LoginPage() {
           <input
             type="text"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            style={inputStyle}
+            onChange={(e) => {
+              setUsername(e.target.value)
+              if (userError) setUserError(false)
+            }}
+            style={{
+              ...inputStyle,
+              borderColor: userError ? colors.danger : '#ddd',
+              borderWidth: userError ? '2px' : '1px'
+            }}
             required
           />
         </div>
@@ -921,8 +1024,15 @@ export default function LoginPage() {
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={inputStyle}
+            onChange={(e) => {
+              setPassword(e.target.value)
+              if (passError) setPassError(false)
+            }}
+            style={{
+              ...inputStyle,
+              borderColor: passError ? colors.danger : '#ddd',
+              borderWidth: passError ? '2px' : '1px'
+            }}
             required
           />
         </div>
@@ -940,7 +1050,17 @@ export default function LoginPage() {
         </button>
       </form>
 
-      {mensaje && <p style={{ textAlign: 'center', marginTop: '10px' }}>{mensaje}</p>}
+      {mensaje && (
+        <p style={{
+          textAlign: 'center',
+          marginTop: '10px',
+          color: (userError || passError) ? colors.danger : 'inherit',
+          fontWeight: (userError || passError) ? 'bold' : 'normal',
+          fontSize: '14px'
+        }}>
+          {mensaje}
+        </p>
+      )}
     </div>
   )
 }
@@ -951,7 +1071,7 @@ const cardStyle = {
   padding: '30px',
   borderRadius: '12px',
   boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
-  width: '300px',
+  width: '350px',
 }
 
 const labelStyle = { display: 'block', fontSize: '14px', color: '#666', marginBottom: '5px' }
