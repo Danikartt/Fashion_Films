@@ -1,0 +1,10 @@
+<svg id="favicon" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo amarillo mostaza -->
+  <rect width="32" height="32" fill="#f6c94d"/>
+  
+  <!-- Borde azul petróleo -->
+  <rect x="1" y="1" width="30" height="30" fill="none" stroke="#105666" stroke-width="2"/>
+  
+  <!-- Texto FF -->
+  <text x="16" y="17" font-family="Century Gothic, sans-serif" font-size="16" font-weight="bold" fill="#105666" text-anchor="middle" dominant-baseline="middle">FF</text>
+</svg>
