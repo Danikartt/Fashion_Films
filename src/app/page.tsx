@@ -55,6 +55,22 @@ const colors = {
   textOnPrimary: '#0a3323', // Texto sobre amarillo
 }
 
+const darkColors = {
+  primary: '#f6c94d',
+  secondary: '#2c7a7b',
+  accent: '#1a365d',
+  dark: '#e2e8f0',
+  success: '#48bb78',
+  danger: '#f56565',
+  pink: '#ed64a6',
+  disabled: '#4a5568',
+  textOnPrimary: '#0a3323',
+  background: '#1a202c',
+  cardBackground: '#2d3748',
+  text: '#f7fafc',
+  border: '#4a5568'
+}
+
 const translations = {
   es: {
     title: 'Fashion Films',
@@ -193,6 +209,16 @@ const translations = {
 export default function LoginPage() {
   const [language, setLanguage] = useState<'es' | 'en'>('es')
   const t = translations[language]
+
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const theme = isDarkMode ? darkColors : { ...colors, background: '#f0f2f5', cardBackground: 'white', text: '#333', border: '#ddd' }
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      document.body.style.backgroundColor = theme.background
+      document.body.style.color = theme.text
+    }
+  }, [isDarkMode, theme.background, theme.text])
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -663,26 +689,43 @@ export default function LoginPage() {
     })
 
     return (
-      <div style={{ ...cardStyle, width: isMobile ? '95vw' : 'min(1000px, 95vw)', position: 'relative', padding: isMobile ? '15px' : '30px' }}>
-        <button
-          onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-          style={{
-            position: 'absolute',
-            top: isMobile ? 10 : 20,
-            right: isMobile ? 10 : 20,
-            backgroundColor: colors.secondary,
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '5px 10px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            zIndex: 100,
-          }}
-        >
-          {t.langBtn}
-        </button>
-        <h1 style={{ fontFamily: 'Century Gothic, sans-serif', color: colors.dark }}>
+      <div style={{ ...cardStyle, width: isMobile ? '95vw' : 'min(1000px, 95vw)', position: 'relative', padding: isMobile ? '15px' : '30px', backgroundColor: theme.cardBackground, color: theme.text }}>
+        <div style={{ position: 'absolute', top: isMobile ? 10 : 20, right: isMobile ? 10 : 20, display: 'flex', gap: '8px', zIndex: 100 }}>
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            style={{
+              backgroundColor: theme.secondary,
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '5px 10px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '16px'
+            }}
+            title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
+          >
+            {isDarkMode ? '☀️' : '🌙'}
+          </button>
+          <button
+            onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+            style={{
+              backgroundColor: theme.secondary,
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '5px 10px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+            }}
+          >
+            {t.langBtn}
+          </button>
+        </div>
+        <h1 style={{ fontFamily: 'Century Gothic, sans-serif', color: theme.dark }}>
           {t.welcome.replace('{username}', username)}
         </h1>
         <p>{mensaje || t.loggedInMsg}</p>
@@ -692,9 +735,9 @@ export default function LoginPage() {
             position: 'sticky',
             top: 12,
             zIndex: 50,
-            background: 'white',
+            background: theme.cardBackground,
             padding: '10px 0',
-            borderBottom: '1px solid #eee',
+            borderBottom: `1px solid ${theme.border}`,
             marginTop: 12,
             marginBottom: 12,
           }}
@@ -704,7 +747,7 @@ export default function LoginPage() {
               onClick={() => setMostrandoInfo(!mostrandoInfo)}
               style={{
                 ...buttonStyle,
-                backgroundColor: colors.pink,
+                backgroundColor: theme.pink,
                 color: 'white',
                 cursor: 'pointer',
                 width: isMobile ? '100%' : 'auto',
@@ -719,8 +762,8 @@ export default function LoginPage() {
               onClick={onClickReproducir}
               style={{
                 ...buttonStyle,
-                backgroundColor: selectedFilm && embedUrl ? colors.primary : colors.disabled,
-                color: selectedFilm && embedUrl ? colors.textOnPrimary : 'white',
+                backgroundColor: selectedFilm && embedUrl ? theme.primary : theme.disabled,
+                color: selectedFilm && embedUrl ? theme.textOnPrimary : 'white',
                 cursor: selectedFilm && embedUrl ? 'pointer' : 'not-allowed',
                 width: isMobile ? '100%' : 'auto',
                 paddingInline: 16,
@@ -735,10 +778,11 @@ export default function LoginPage() {
               onClick={onClickFavorito}
               style={{
                 ...buttonStyle,
-                backgroundColor: selectedFilm ? (favoritoSeleccionado ? colors.danger : colors.secondary) : colors.disabled,
+                backgroundColor: selectedFilm ? (favoritoSeleccionado ? theme.danger : theme.secondary) : theme.disabled,
                 cursor: selectedFilm ? 'pointer' : 'not-allowed',
                 width: isMobile ? '100%' : 'auto',
                 paddingInline: 16,
+                color: 'white',
               }}
               disabled={!selectedFilm}
               type="button"
@@ -754,7 +798,7 @@ export default function LoginPage() {
                 setFavoritoSeleccionado(false)
                 if (next) await cargarMisFavoritos()
               }}
-              style={{ ...buttonStyle, width: isMobile ? '100%' : 'auto', paddingInline: 16, backgroundColor: colors.secondary }}
+              style={{ ...buttonStyle, width: isMobile ? '100%' : 'auto', paddingInline: 16, backgroundColor: theme.secondary, color: 'white' }}
               type="button"
             >
               {viendoFavoritos ? t.volverTodos : t.verFavoritos}
@@ -766,7 +810,8 @@ export default function LoginPage() {
                 ...buttonStyle,
                 width: isMobile ? '100%' : 'auto',
                 paddingInline: 16,
-                backgroundColor: mostrandoFormulario ? colors.danger : colors.success
+                backgroundColor: mostrandoFormulario ? theme.danger : theme.success,
+                color: 'white'
               }}
               type="button"
             >
@@ -775,7 +820,7 @@ export default function LoginPage() {
 
             <button
               onClick={cerrarSesion}
-              style={{ ...buttonStyle, width: isMobile ? '100%' : 'auto', paddingInline: 16, backgroundColor: colors.dark }}
+              style={{ ...buttonStyle, width: isMobile ? '100%' : 'auto', paddingInline: 16, backgroundColor: theme.dark, color: isDarkMode ? '#1a202c' : 'white' }}
               type="button"
             >
               {t.cerrarSesion}
@@ -785,12 +830,12 @@ export default function LoginPage() {
 
         {mostrandoInfo && (
           <div style={{
-            background: colors.accent,
+            background: theme.accent,
             padding: 20,
             borderRadius: 8,
             marginBottom: 20,
-            border: `2px solid ${colors.pink}`,
-            color: colors.dark,
+            border: `2px solid ${theme.pink}`,
+            color: isDarkMode ? 'white' : theme.dark,
             fontSize: '15px',
             lineHeight: '1.5'
           }}>
@@ -799,7 +844,7 @@ export default function LoginPage() {
               href={`${t.enlaceMasInfo}`}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: colors.secondary, fontWeight: 'bold', textDecoration: 'underline' }}
+              style={{ color: theme.secondary, fontWeight: 'bold', textDecoration: 'underline' }}
             >
               {t.enlaceMasInfo}
             </a>
@@ -808,55 +853,55 @@ export default function LoginPage() {
 
         {mostrandoFormulario && (
           <div style={{
-            background: colors.accent,
+            background: theme.accent,
             padding: 20,
             borderRadius: 8,
             marginBottom: 20,
-            border: `2px solid ${colors.primary}`
+            border: `2px solid ${theme.primary}`
           }}>
-            <h3 style={{ margin: '0 0 16px', fontFamily: 'Century Gothic, sans-serif', color: colors.dark }}>
+            <h3 style={{ margin: '0 0 16px', fontFamily: 'Century Gothic, sans-serif', color: isDarkMode ? 'white' : theme.dark }}>
               {t.nuevoFilm}
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={labelStyle}>{t.titulo} *</label>
+                <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.titulo} *</label>
                 <input
                   type="text"
                   value={nuevoTitulo}
                   onChange={(e) => setNuevoTitulo(e.target.value)}
-                  style={inputStyle}
+                  style={{ ...inputStyle, backgroundColor: isDarkMode ? '#4a5568' : 'white', color: theme.text, borderColor: theme.border }}
                   placeholder="Ej: Fashion Film 2024"
                   disabled={guardandoFilm}
                 />
               </div>
 
               <div>
-                <label style={labelStyle}>{t.direccion} *</label>
+                <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.direccion} *</label>
                 <input
                   type="text"
                   value={nuevaDireccion}
                   onChange={(e) => setNuevaDireccion(e.target.value)}
-                  style={inputStyle}
+                  style={{ ...inputStyle, backgroundColor: isDarkMode ? '#4a5568' : 'white', color: theme.text, borderColor: theme.border }}
                   placeholder="Ej: John Doe"
                   disabled={guardandoFilm}
                 />
               </div>
 
               <div>
-                <label style={labelStyle}>{t.anio}</label>
+                <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.anio}</label>
                 <input
                   type="text"
                   value={nuevoAnio}
                   onChange={(e) => setNuevoAnio(e.target.value)}
-                  style={inputStyle}
+                  style={{ ...inputStyle, backgroundColor: isDarkMode ? '#4a5568' : 'white', color: theme.text, borderColor: theme.border }}
                   placeholder="Ej: 2024"
                   disabled={guardandoFilm}
                 />
               </div>
 
               <div>
-                <label style={labelStyle}>{t.duracion}</label>
+                <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.duracion}</label>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <input
                     type="number"
@@ -864,18 +909,18 @@ export default function LoginPage() {
                     max="59"
                     value={nuevoMinutos}
                     onChange={(e) => setNuevoMinutos(e.target.value)}
-                    style={{ ...inputStyle, width: '80px' }}
+                    style={{ ...inputStyle, width: '80px', backgroundColor: isDarkMode ? '#4a5568' : 'white', color: theme.text, borderColor: theme.border }}
                     placeholder="MM"
                     disabled={guardandoFilm}
                   />
-                  <span style={{ fontSize: 18, fontWeight: 'bold' }}>:</span>
+                  <span style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}>:</span>
                   <input
                     type="number"
                     min="0"
                     max="59"
                     value={nuevoSegundos}
                     onChange={(e) => setNuevoSegundos(e.target.value)}
-                    style={{ ...inputStyle, width: '80px' }}
+                    style={{ ...inputStyle, width: '80px', backgroundColor: isDarkMode ? '#4a5568' : 'white', color: theme.text, borderColor: theme.border }}
                     placeholder="SS"
                     disabled={guardandoFilm}
                   />
@@ -883,12 +928,12 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label style={labelStyle}>{t.link}</label>
+                <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.link}</label>
                 <input
                   type="url"
                   value={nuevoLink}
                   onChange={(e) => setNuevoLink(e.target.value)}
-                  style={inputStyle}
+                  style={{ ...inputStyle, backgroundColor: isDarkMode ? '#4a5568' : 'white', color: theme.text, borderColor: theme.border }}
                   placeholder="Ej: https://www.youtube.com/watch?v=..."
                   disabled={guardandoFilm}
                 />
@@ -898,8 +943,9 @@ export default function LoginPage() {
                 onClick={guardarNuevoFilm}
                 style={{
                   ...buttonStyle,
-                  backgroundColor: guardandoFilm ? colors.disabled : colors.success,
-                  cursor: guardandoFilm ? 'not-allowed' : 'pointer'
+                  backgroundColor: guardandoFilm ? theme.disabled : theme.success,
+                  cursor: guardandoFilm ? 'not-allowed' : 'pointer',
+                  color: 'white'
                 }}
                 disabled={guardandoFilm}
                 type="button"
@@ -911,7 +957,7 @@ export default function LoginPage() {
         )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', marginBottom: 12, flexDirection: isMobile ? 'column' : 'row', gap: 10 }}>
-          <h2 style={{ margin: 0, fontFamily: 'Century Gothic, sans-serif', color: colors.dark, fontSize: isMobile ? '1.2rem' : '1.5rem' }}>
+          <h2 style={{ margin: 0, fontFamily: 'Century Gothic, sans-serif', color: theme.dark, fontSize: isMobile ? '1.2rem' : '1.5rem' }}>
             {viendoFavoritos ? t.misFavoritos : t.fashionFilms}
           </h2>
 
@@ -924,6 +970,9 @@ export default function LoginPage() {
               ...inputStyle,
               width: isMobile ? '100%' : '300px',
               padding: '8px 12px',
+              backgroundColor: isDarkMode ? '#4a5568' : 'white',
+              color: theme.text,
+              borderColor: theme.border
             }}
           />
         </div>
@@ -937,12 +986,12 @@ export default function LoginPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th style={thStyle}>{t.titulo}</th>
+                  <th style={{ ...thStyle, color: isDarkMode ? '#e2e8f0' : '#333', borderBottomColor: theme.border }}>{t.titulo}</th>
                   {!isMobile && (
                     <>
-                      <th style={thStyle}>{t.direccion}</th>
-                      <th style={thStyle}>{t.fechaPub}</th>
-                      <th style={thStyle}>{t.duracion}</th>
+                      <th style={{ ...thStyle, color: isDarkMode ? '#e2e8f0' : '#333', borderBottomColor: theme.border }}>{t.direccion}</th>
+                      <th style={{ ...thStyle, color: isDarkMode ? '#e2e8f0' : '#333', borderBottomColor: theme.border }}>{t.fechaPub}</th>
+                      <th style={{ ...thStyle, color: isDarkMode ? '#e2e8f0' : '#333', borderBottomColor: theme.border }}>{t.duracion}</th>
                     </>
                   )}
                 </tr>
@@ -961,16 +1010,16 @@ export default function LoginPage() {
                           }
                         }}
                         style={{
-                          background: isSelected ? '#eef5ff' : 'transparent',
+                          background: isSelected ? (isDarkMode ? '#3e4a5b' : '#eef5ff') : 'transparent',
                           cursor: 'pointer',
                         }}
                         title={f.link ? 'Selecciona para activar Reproducir' : 'Sin link'}
                       >
-                        <td style={tdStyle}>
+                        <td style={{ ...tdStyle, borderBottomColor: theme.border, color: theme.text }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span>{f.titulo}</span>
                             {isMobile && (
-                              <span style={{ fontSize: '10px', color: '#888' }}>
+                              <span style={{ fontSize: '10px', color: isDarkMode ? '#a0aec0' : '#888' }}>
                                 {isExpanded ? '▲' : '▼'}
                               </span>
                             )}
@@ -978,16 +1027,16 @@ export default function LoginPage() {
                         </td>
                         {!isMobile && (
                           <>
-                            <td style={tdStyle}>{f.direccion}</td>
-                            <td style={tdStyle}>{f.fecha_publicacion ?? '-'}</td>
-                            <td style={tdStyle}>{f.duracion ?? '-'}</td>
+                            <td style={{ ...tdStyle, borderBottomColor: theme.border, color: theme.text }}>{f.direccion}</td>
+                            <td style={{ ...tdStyle, borderBottomColor: theme.border, color: theme.text }}>{f.fecha_publicacion ?? '-'}</td>
+                            <td style={{ ...tdStyle, borderBottomColor: theme.border, color: theme.text }}>{f.duracion ?? '-'}</td>
                           </>
                         )}
                       </tr>
                       {isExpanded && (
-                        <tr style={{ background: '#f9f9f9' }}>
-                          <td colSpan={1} style={{ ...tdStyle, whiteSpace: 'normal', padding: '10px 20px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
+                        <tr style={{ background: isDarkMode ? '#2d3748' : '#f9f9f9' }}>
+                          <td colSpan={1} style={{ ...tdStyle, whiteSpace: 'normal', padding: '10px 20px', borderBottomColor: theme.border }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: theme.text }}>
                               <div><strong>{t.direccion}:</strong> {f.direccion}</div>
                               <div><strong>{t.fechaPub}:</strong> {f.fecha_publicacion ?? '-'}</div>
                               <div><strong>{t.duracion}:</strong> {f.duracion ?? '-'}</div>
@@ -1017,15 +1066,15 @@ export default function LoginPage() {
 
         {isModalOpen && (
           <div style={overlayStyle} onClick={() => setIsModalOpen(false)}>
-            <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+            <div style={{ ...modalStyle, backgroundColor: theme.cardBackground, color: theme.text }} onClick={(e) => e.stopPropagation()}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-                <h3 style={{ margin: 0, fontFamily: 'Century Gothic, sans-serif', color: colors.dark }}>
+                <h3 style={{ margin: 0, fontFamily: 'Century Gothic, sans-serif', color: isDarkMode ? 'white' : theme.dark }}>
                   {selectedFilm?.titulo ?? t.reproduciendo}
                 </h3>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  style={{ ...buttonStyle, width: 'auto', paddingInline: 12, backgroundColor: colors.dark }}
+                  style={{ ...buttonStyle, width: 'auto', paddingInline: 12, backgroundColor: theme.dark, color: isDarkMode ? '#1a202c' : 'white' }}
                 >
                   {t.cerrar}
                 </button>
@@ -1061,32 +1110,49 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ ...cardStyle, width: isMobile ? '90vw' : '350px', position: 'relative', padding: isMobile ? '20px' : '30px' }}>
-      <button
-        onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-        style={{
-          position: 'absolute',
-          top: isMobile ? 10 : 20,
-          right: isMobile ? 10 : 20,
-          backgroundColor: colors.secondary,
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          padding: '5px 10px',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          zIndex: 100,
-        }}
-      >
-        {t.langBtn}
-      </button>
-      <h2 style={{ textAlign: 'center', fontFamily: 'Century Gothic, sans-serif', color: colors.dark }}>
+    <div style={{ ...cardStyle, width: isMobile ? '90vw' : '350px', position: 'relative', padding: isMobile ? '20px' : '30px', backgroundColor: theme.cardBackground, color: theme.text }}>
+      <div style={{ position: 'absolute', top: isMobile ? 10 : 20, right: isMobile ? 10 : 20, display: 'flex', gap: '8px', zIndex: 100 }}>
+        <button
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          style={{
+            backgroundColor: theme.secondary,
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '5px 10px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '16px'
+          }}
+          title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
+        >
+          {isDarkMode ? '☀️' : '🌙'}
+        </button>
+        <button
+          onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
+          style={{
+            backgroundColor: theme.secondary,
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '5px 10px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+          }}
+        >
+          {t.langBtn}
+        </button>
+      </div>
+      <h2 style={{ textAlign: 'center', fontFamily: 'Century Gothic, sans-serif', color: theme.dark }}>
         {t.title}
       </h2>
 
       <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <div>
-          <label style={labelStyle}>{t.usuarioLabel}</label>
+          <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.usuarioLabel}</label>
           <input
             type="text"
             value={username}
@@ -1096,14 +1162,16 @@ export default function LoginPage() {
             }}
             style={{
               ...inputStyle,
-              borderColor: userError ? colors.danger : '#ddd',
-              borderWidth: userError ? '2px' : '1px'
+              borderColor: userError ? theme.danger : theme.border,
+              borderWidth: userError ? '2px' : '1px',
+              backgroundColor: isDarkMode ? '#4a5568' : 'white',
+              color: theme.text
             }}
           />
         </div>
 
         <div>
-          <label style={labelStyle}>{t.claveLabel}</label>
+          <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.claveLabel}</label>
           <input
             type="password"
             value={password}
@@ -1113,8 +1181,10 @@ export default function LoginPage() {
             }}
             style={{
               ...inputStyle,
-              borderColor: passError ? colors.danger : '#ddd',
-              borderWidth: passError ? '2px' : '1px'
+              borderColor: passError ? theme.danger : theme.border,
+              borderWidth: passError ? '2px' : '1px',
+              backgroundColor: isDarkMode ? '#4a5568' : 'white',
+              color: theme.text
             }}
           />
         </div>
@@ -1122,12 +1192,12 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={handleRegister}
-          style={{ ...buttonStyle, backgroundColor: colors.secondary }}
+          style={{ ...buttonStyle, backgroundColor: theme.secondary, color: 'white' }}
         >
           {t.registrarse}
         </button>
 
-        <button type="submit" style={{ ...buttonStyle, backgroundColor: colors.primary, color: colors.secondary }}>
+        <button type="submit" style={{ ...buttonStyle, backgroundColor: theme.primary, color: theme.textOnPrimary }}>
           {t.iniciarSesion}
         </button>
       </form>
@@ -1136,7 +1206,7 @@ export default function LoginPage() {
         <p style={{
           textAlign: 'center',
           marginTop: '10px',
-          color: (userError || passError) ? colors.danger : 'inherit',
+          color: (userError || passError) ? theme.danger : theme.text,
           fontWeight: (userError || passError) ? 'bold' : 'normal',
           fontSize: '14px'
         }}>
