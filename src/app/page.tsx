@@ -75,7 +75,6 @@ const translations = {
   es: {
     title: 'Fashion Films',
     welcome: '¡Hola, {username}!',
-    loggedInMsg: 'Has accedido correctamente a la app.',
     reproducir: 'Reproducir',
     quitarFavorito: 'Quitar de favoritos',
     marcarFavorito: 'Marcar como favorito',
@@ -114,8 +113,8 @@ const translations = {
     loginError: 'Usuario o clave incorrectos',
     loginExito: '¡Hola de nuevo, {username}!',
     registrando: 'Registrando usuario...',
-    validarClave: 'La clave no puede contener "admin" y debe tener al menos 5 caracteres alfanuméricos, sin signos.',
-    validarNombre: 'El nombre no puede contener "admin", no debe tener signos y solo se permiten uno o dos nombres.',
+    validarClave: 'La clave no es válida. Debe tener al menos 5 caracteres alfanuméricos, sin signos.',
+    validarNombre: 'El nombre no es válido, no debe tener signos y solo se permiten uno o dos nombres.',
     noUsuarioId: 'No se encontró usuarioId. Vuelve a iniciar sesión.',
     noLink: 'Este fashion film no tiene link.',
     linkInvalido: 'El link no parece ser de YouTube o Vimeo (o no se pudo convertir a embed).',
@@ -140,7 +139,6 @@ const translations = {
   en: {
     title: 'Fashion Films',
     welcome: 'Hello, {username}!',
-    loggedInMsg: 'You have successfully accessed the app.',
     reproducir: 'Play',
     quitarFavorito: 'Remove from favorites',
     marcarFavorito: 'Mark as favorite',
@@ -179,8 +177,8 @@ const translations = {
     loginError: 'Incorrect username or password',
     loginExito: 'Welcome back, {username}!',
     registrando: 'Registering user...',
-    validarClave: 'The password cannot contain "admin" and must have at least 5 alphanumeric characters with no symbols.',
-    validarNombre: 'The username cannot contain "admin", must not have signs and only one or two names are allowed.',
+    validarClave: 'The password is invalid. It must have at least 5 alphanumeric characters with no symbols.',
+    validarNombre: 'The username is invalid, must not have signs and only one or two names are allowed.',
     noUsuarioId: 'User ID not found. Please log in again.',
     noLink: 'This fashion film has no link.',
     linkInvalido: 'The link does not seem to be from YouTube or Vimeo (or could not be converted to embed).',
@@ -728,7 +726,7 @@ export default function LoginPage() {
         <h1 style={{ fontFamily: 'Century Gothic, sans-serif', color: theme.dark }}>
           {t.welcome.replace('{username}', username)}
         </h1>
-        <p>{mensaje || t.loggedInMsg}</p>
+
 
         <div
           style={{
