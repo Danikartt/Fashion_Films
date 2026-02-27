@@ -842,7 +842,7 @@ export default function LoginPage() {
               href={`${t.enlaceMasInfo}`}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: theme.secondary, fontWeight: 'bold', textDecoration: 'underline' }}
+              style={{ color: theme.secondary, fontWeight: 'bold', textDecoration: 'underline', wordBreak: 'break-all' }}
             >
               {t.enlaceMasInfo}
             </a>
