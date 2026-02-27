@@ -78,7 +78,7 @@ const translations = {
     guardar: 'Guardar Fashion Film',
     misFavoritos: 'Mis favoritos',
     fashionFilms: 'FashionFilms',
-    buscarPlaceholder: 'Buscar por título o dirección...',
+    buscarPlaceholder: 'Buscar por título, dirección, duración o año...',
     cargandoFavoritos: 'Cargando favoritos...',
     cargando: 'Cargando...',
     fechaPub: 'Fecha publicación',
@@ -114,6 +114,11 @@ const translations = {
     guardandoMsg: 'Guardando nuevo fashion film...',
     guardadoExito: '¡Fashion film guardado exitosamente!',
     guardarError: 'Error al guardar: ',
+    camposVacios: 'Debes completar el nombre de usuario y la contraseña.',
+    debeRegistrarse: 'El usuario no existe. Debes registrarte primero.',
+    queEsFashionFilm: '¿Qué es un Fashion Film?',
+    infoFashionFilm: 'Un fashion film es una creación audiovisual breve vinculada a una firma, diseñador o marca de moda, donde la indumentaria y la estética constituyen el núcleo del significado visual y simbólico. Su objetivo es comunicar identidad, valores y el universo estilístico y simbólico de una marca mediante una narrativa artística o experimental, no mediante la promoción directa de un producto.\n Más info y PDF descargable en:',
+    enlaceMasInfo: 'https://polired.upm.es/index.php/ardin/article/view/5432',
     langBtn: 'EN'
   },
   en: {
@@ -138,7 +143,7 @@ const translations = {
     guardar: 'Save Fashion Film',
     misFavoritos: 'My favorites',
     fashionFilms: 'FashionFilms',
-    buscarPlaceholder: 'Search by title or direction...',
+    buscarPlaceholder: 'Search by title, direction, duration or year...',
     cargandoFavoritos: 'Loading favorites...',
     cargando: 'Loading...',
     fechaPub: 'Release date',
@@ -167,6 +172,7 @@ const translations = {
     consultarAccionError: 'Could not query AccionUsuario: ',
     actualizarAccionError: 'Could not update AccionUsuario: ',
     insertarAccionError: 'Could not insert AccionUsuario: ',
+    statusAccionError: 'Could not update AccionUsuario: ',
     visualizacionesError: 'Could not increment views: ',
     cargarFavoritosError: 'Could not load favorites: ',
     cargarDatosError: 'Could not load FashionFilms data: ',
@@ -174,6 +180,12 @@ const translations = {
     guardandoMsg: 'Saving new fashion film...',
     guardadoExito: 'Fashion film saved successfully!',
     guardarError: 'Error saving: ',
+    camposVacios: 'You must fill in the username and password.',
+    debeRegistrarse: 'User does not exist. You must register first.',
+    queEsFashionFilm: 'What is a Fashion Film?',
+    infoFashionFilm: 'A fashion film is a short audiovisual creation linked to a fashion label, designer, or brand, where clothing and aesthetics are at the core of the visual and symbolic meaning. Its goal is to communicate a brand\'s identity, values, and stylistic and symbolic universe through an artistic or experimental narrative, rather than through the direct promotion of a product.\n' +
+        'More info and downloadable PDF at:',
+    enlaceMasInfo: 'https://polired.upm.es/index.php/ardin/article/view/5432',
     langBtn: 'ES'
   }
 }
@@ -226,6 +238,7 @@ export default function LoginPage() {
   const [guardandoFilm, setGuardandoFilm] = useState(false)
 
   const [busqueda, setBusqueda] = useState('')
+  const [mostrandoInfo, setMostrandoInfo] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -298,6 +311,14 @@ export default function LoginPage() {
     setUserError(false)
     setPassError(false)
 
+    // Validar si están vacíos
+    if (!username.trim() || !password.trim()) {
+      setMensaje(t.camposVacios)
+      if (!username.trim()) setUserError(true)
+      if (!password.trim()) setPassError(true)
+      return
+    }
+
     // Validaciones
 
      // Validación de clave
@@ -354,11 +375,20 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setMensaje(t.verificando)
 
     // Reiniciar estados de error previos
     setUserError(false)
     setPassError(false)
+
+    // Validar si están vacíos
+    if (!username.trim() || !password.trim()) {
+      setMensaje(t.camposVacios)
+      if (!username.trim()) setUserError(true)
+      if (!password.trim()) setPassError(true)
+      return
+    }
+
+    setMensaje(t.verificando)
 
     // Buscar por nombre primero para identificar con precisión el campo incorrecto
     const { data: userByName, error: errorByName } = await supabase
@@ -368,10 +398,10 @@ export default function LoginPage() {
       .maybeSingle()
 
     if (errorByName || !userByName) {
-      // Usuario no existe o error: marcamos usuario como incorrecto y explicamos cómo debe ser
+      // Usuario no existe o error: marcamos usuario como incorrecto y pedimos registro
       setUserError(true)
       setPassError(false)
-      setMensaje(t.validarNombre)
+      setMensaje(t.debeRegistrarse)
       return
     }
 
@@ -626,7 +656,9 @@ export default function LoginPage() {
       const busquedaLower = busqueda.toLowerCase()
       return (
         f.titulo.toLowerCase().includes(busquedaLower) ||
-        f.direccion.toLowerCase().includes(busquedaLower)
+        f.direccion.toLowerCase().includes(busquedaLower) ||
+        (f.fecha_publicacion && f.fecha_publicacion.toLowerCase().includes(busquedaLower)) ||
+        (f.duracion && f.duracion.toString().toLowerCase().includes(busquedaLower))
       )
     })
 
@@ -668,6 +700,21 @@ export default function LoginPage() {
           }}
         >
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+            <button
+              onClick={() => setMostrandoInfo(!mostrandoInfo)}
+              style={{
+                ...buttonStyle,
+                backgroundColor: colors.pink,
+                color: 'white',
+                cursor: 'pointer',
+                width: isMobile ? '100%' : 'auto',
+                paddingInline: 16,
+              }}
+              type="button"
+            >
+              {t.queEsFashionFilm}
+            </button>
+
             <button
               onClick={onClickReproducir}
               style={{
@@ -735,6 +782,29 @@ export default function LoginPage() {
             </button>
           </div>
         </div>
+
+        {mostrandoInfo && (
+          <div style={{
+            background: colors.accent,
+            padding: 20,
+            borderRadius: 8,
+            marginBottom: 20,
+            border: `2px solid ${colors.pink}`,
+            color: colors.dark,
+            fontSize: '15px',
+            lineHeight: '1.5'
+          }}>
+            <p style={{ margin: '0 0 10px 0' }}>{t.infoFashionFilm}</p>
+            <a
+              href={`${t.enlaceMasInfo}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: colors.secondary, fontWeight: 'bold', textDecoration: 'underline' }}
+            >
+              {t.enlaceMasInfo}
+            </a>
+          </div>
+        )}
 
         {mostrandoFormulario && (
           <div style={{
@@ -1029,7 +1099,6 @@ export default function LoginPage() {
               borderColor: userError ? colors.danger : '#ddd',
               borderWidth: userError ? '2px' : '1px'
             }}
-            required
           />
         </div>
 
@@ -1047,7 +1116,6 @@ export default function LoginPage() {
               borderColor: passError ? colors.danger : '#ddd',
               borderWidth: passError ? '2px' : '1px'
             }}
-            required
           />
         </div>
 
