@@ -10,6 +10,14 @@ type FashionFilm = {
   duracion: string | number | null
   link: string | null
   visualizaciones: number | null
+  sinopsis?: string | null
+}
+
+type Comentario = {
+  id: string
+  comentario: string
+  fecha_comentario: string
+  Usuarios: { nombre: string }
 }
 
 function toEmbedUrl(rawLink: string): string | null {
@@ -134,6 +142,16 @@ const translations = {
     queEsFashionFilm: '¿Qué es un Fashion Film?',
     infoFashionFilm: 'Un fashion film es una creación audiovisual breve vinculada a una firma, diseñador o marca de moda, donde la indumentaria y la estética constituyen el núcleo del significado visual y simbólico. Su objetivo es comunicar identidad, valores y el universo estilístico y simbólico de una marca mediante una narrativa artística o experimental, no mediante la promoción directa de un producto.\n Más info y PDF descargable en:',
     enlaceMasInfo: 'https://polired.upm.es/index.php/ardin/article/view/5432',
+    verComentarios: 'Ver comentarios',
+    anadirComentario: 'Añadir comentario',
+    escribeComentario: 'Escribe tu comentario...',
+    enviar: 'Enviar',
+    noComentarios: 'Aún no hay comentarios. ¡Sé el primero en comentar!',
+    comentariosDe: 'Comentarios de',
+    cargandoComentarios: 'Cargando comentarios...',
+    errorComentarios: 'Error al cargar comentarios: ',
+    comentarioExito: '¡Comentario añadido!',
+    sinopsis: 'Sinopsis',
     langBtn: 'EN'
   },
   en: {
@@ -200,6 +218,16 @@ const translations = {
     infoFashionFilm: 'A fashion film is a short audiovisual creation linked to a fashion label, designer, or brand, where clothing and aesthetics are at the core of the visual and symbolic meaning. Its goal is to communicate a brand\'s identity, values, and stylistic and symbolic universe through an artistic or experimental narrative, rather than through the direct promotion of a product.\n' +
         'More info and downloadable PDF at:',
     enlaceMasInfo: 'https://polired.upm.es/index.php/ardin/article/view/5432',
+    verComentarios: 'View comments',
+    anadirComentario: 'Add comment',
+    escribeComentario: 'Write your comment...',
+    enviar: 'Send',
+    noComentarios: 'No comments yet. Be the first to comment!',
+    comentariosDe: 'Comments on',
+    cargandoComentarios: 'Loading comments...',
+    errorComentarios: 'Error loading comments: ',
+    comentarioExito: 'Comment added!',
+    sinopsis: 'Synopsis',
     langBtn: 'ES'
   }
 }
@@ -261,6 +289,12 @@ export default function LoginPage() {
   const [nuevoLink, setNuevoLink] = useState('')
   const [guardandoFilm, setGuardandoFilm] = useState(false)
 
+  const [isComentariosModalOpen, setIsComentariosModalOpen] = useState(false)
+  const [isAddComentarioModalOpen, setIsAddComentarioModalOpen] = useState(false)
+  const [comentariosList, setComentariosList] = useState<Comentario[]>([])
+  const [cargandoComentarios, setCargandoComentarios] = useState(false)
+  const [nuevoComentarioTexto, setNuevoComentarioTexto] = useState('')
+
   const [busqueda, setBusqueda] = useState('')
   const [mostrandoInfo, setMostrandoInfo] = useState(false)
 
@@ -292,7 +326,7 @@ export default function LoginPage() {
 
       const { data, error } = await supabase
         .from('FashionFilms')
-        .select('film_id, titulo, direccion, fecha_publicacion, duracion, link, visualizaciones')
+        .select('film_id, titulo, direccion, fecha_publicacion, duracion, link, visualizaciones, sinopsis')
         .order('titulo', { ascending: true })
 
       if (error) {
@@ -590,7 +624,7 @@ export default function LoginPage() {
 
     const { data: favFilms, error: errorFilms } = await supabase
       .from('FashionFilms')
-      .select('film_id, titulo, direccion, fecha_publicacion, duracion, link, visualizaciones')
+      .select('film_id, titulo, direccion, fecha_publicacion, duracion, link, visualizaciones, sinopsis')
       .in('film_id', filmIds)
       .order('fecha_publicacion', { ascending: false })
 
@@ -661,7 +695,7 @@ export default function LoginPage() {
     // Recargar lista de films
     const { data: todosFilms, error: errorCargar } = await supabase
       .from('FashionFilms')
-      .select('film_id, titulo, direccion, fecha_publicacion, duracion, link, visualizaciones')
+      .select('film_id, titulo, direccion, fecha_publicacion, duracion, link, visualizaciones, sinopsis')
       .order('titulo', { ascending: true })
 
     if (!errorCargar && todosFilms) {
@@ -669,6 +703,50 @@ export default function LoginPage() {
     }
 
     setTimeout(() => setMensaje(''), 3000)
+  }
+
+  const cargarComentarios = async (filmId: string) => {
+    setCargandoComentarios(true)
+    const { data, error } = await supabase
+      .from('Comentarios')
+      .select('id, comentario, fecha_comentario, Usuarios(nombre)')
+      .eq('film_id', filmId)
+      .order('fecha_comentario', { ascending: false })
+
+    if (error) {
+      setMensaje(t.errorComentarios + error.message)
+      setComentariosList([])
+    } else {
+      setComentariosList((data as any) as Comentario[])
+    }
+    setCargandoComentarios(false)
+  }
+
+  const abrirComentarios = async () => {
+    if (!selectedFilm) return
+    setIsComentariosModalOpen(true)
+    await cargarComentarios(selectedFilm.film_id)
+  }
+
+  const guardarNuevoComentario = async () => {
+    if (!selectedFilm || !usuarioId || !nuevoComentarioTexto.trim()) return
+    setMensaje(t.guardando)
+    const { error } = await supabase
+      .from('Comentarios')
+      .insert([{
+        usuario_id: usuarioId,
+        film_id: selectedFilm.film_id,
+        comentario: nuevoComentarioTexto.trim()
+      }])
+    
+    if (error) {
+      setMensaje(t.errorComentarios + error.message)
+    } else {
+      setMensaje(t.comentarioExito)
+      setNuevoComentarioTexto('')
+      setIsAddComentarioModalOpen(false)
+      setTimeout(() => setMensaje(''), 3000)
+    }
   }
 
   if (estaLogueado) {
@@ -800,6 +878,38 @@ export default function LoginPage() {
               type="button"
             >
               {viendoFavoritos ? t.volverTodos : t.verFavoritos}
+            </button>
+
+            <button
+              onClick={() => setIsAddComentarioModalOpen(true)}
+              style={{
+                ...buttonStyle,
+                backgroundColor: selectedFilm ? theme.success : theme.disabled,
+                cursor: selectedFilm ? 'pointer' : 'not-allowed',
+                width: isMobile ? '100%' : 'auto',
+                paddingInline: 16,
+                color: 'white',
+              }}
+              disabled={!selectedFilm}
+              type="button"
+            >
+              {t.anadirComentario}
+            </button>
+
+            <button
+              onClick={abrirComentarios}
+              style={{
+                ...buttonStyle,
+                backgroundColor: selectedFilm ? theme.primary : theme.disabled,
+                color: selectedFilm ? theme.textOnPrimary : 'white',
+                cursor: selectedFilm ? 'pointer' : 'not-allowed',
+                width: isMobile ? '100%' : 'auto',
+                paddingInline: 16,
+              }}
+              disabled={!selectedFilm}
+              type="button"
+            >
+              {t.verComentarios}
             </button>
 
             <button
@@ -1038,6 +1148,7 @@ export default function LoginPage() {
                               <div><strong>{t.direccion}:</strong> {f.direccion}</div>
                               <div><strong>{t.fechaPub}:</strong> {f.fecha_publicacion ?? '-'}</div>
                               <div><strong>{t.duracion}:</strong> {f.duracion ?? '-'}</div>
+                              {f.sinopsis && <div style={{ marginTop: 8 }}><strong>{t.sinopsis}:</strong> <span style={{ display: 'block', marginTop: 4 }}>{f.sinopsis}</span></div>}
                             </div>
                           </td>
                         </tr>
@@ -1099,7 +1210,97 @@ export default function LoginPage() {
                 ) : (
                   <p>{t.noEmbed}</p>
                 )}
+                
+                {selectedFilm?.sinopsis && (
+                  <div style={{ marginTop: 16, fontSize: '14px', lineHeight: '1.6', color: isDarkMode ? '#cbd5e0' : '#4a5568' }}>
+                    <strong>{t.sinopsis}:</strong>
+                    <p style={{ marginTop: 8, whiteSpace: 'pre-wrap' }}>{selectedFilm.sinopsis}</p>
+                  </div>
+                )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {isComentariosModalOpen && (
+          <div style={overlayStyle} onClick={() => setIsComentariosModalOpen(false)}>
+            <div style={{ ...modalStyle, backgroundColor: theme.cardBackground, color: theme.text, maxHeight: '80vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+                <h3 style={{ margin: 0, fontFamily: 'Century Gothic, sans-serif', color: isDarkMode ? 'white' : theme.dark }}>
+                  {t.comentariosDe} {selectedFilm?.titulo}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsComentariosModalOpen(false)}
+                  style={{ ...buttonStyle, width: 'auto', paddingInline: 12, backgroundColor: theme.dark, color: isDarkMode ? '#1a202c' : 'white' }}
+                >
+                  {t.cerrar}
+                </button>
+              </div>
+              {cargandoComentarios ? (
+                <p>{t.cargandoComentarios}</p>
+              ) : comentariosList.length === 0 ? (
+                <p>{t.noComentarios}</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {comentariosList.map((c) => (
+                    <div key={c.id} style={{ padding: 12, backgroundColor: isDarkMode ? '#4a5568' : '#f7f4d5', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.85rem', color: isDarkMode ? '#cbd5e0' : '#555' }}>
+                        <strong>{c.Usuarios?.nombre || 'Usuario'}</strong>
+                        <span>{new Date(c.fecha_comentario).toLocaleString()}</span>
+                      </div>
+                      <p style={{ margin: 0 }}>{c.comentario}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {isAddComentarioModalOpen && (
+          <div style={overlayStyle} onClick={() => setIsAddComentarioModalOpen(false)}>
+            <div style={{ ...modalStyle, backgroundColor: theme.cardBackground, color: theme.text, maxWidth: 500 }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+                <h3 style={{ margin: 0, fontFamily: 'Century Gothic, sans-serif', color: isDarkMode ? 'white' : theme.dark }}>
+                  {t.anadirComentario} - {selectedFilm?.titulo}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsAddComentarioModalOpen(false)}
+                  style={{ ...buttonStyle, width: 'auto', paddingInline: 12, backgroundColor: theme.dark, color: isDarkMode ? '#1a202c' : 'white' }}
+                >
+                  {t.cerrar}
+                </button>
+              </div>
+              <textarea
+                value={nuevoComentarioTexto}
+                onChange={(e) => setNuevoComentarioTexto(e.target.value)}
+                placeholder={t.escribeComentario}
+                style={{
+                  width: '100%',
+                  minHeight: 100,
+                  padding: 12,
+                  borderRadius: 8,
+                  border: `1px solid ${theme.border}`,
+                  backgroundColor: isDarkMode ? '#4a5568' : 'white',
+                  color: theme.text,
+                  marginBottom: 16,
+                  resize: 'vertical'
+                }}
+              />
+              <button
+                onClick={guardarNuevoComentario}
+                disabled={!nuevoComentarioTexto.trim()}
+                style={{
+                  ...buttonStyle,
+                  backgroundColor: nuevoComentarioTexto.trim() ? theme.success : theme.disabled,
+                  color: 'white'
+                }}
+                type="button"
+              >
+                {t.enviar}
+              </button>
             </div>
           </div>
         )}
