@@ -50,29 +50,29 @@ function toEmbedUrl(rawLink: string): string | null {
   }
 }
 
-// Paleta de colores
+// Paleta de colores (Estilo Editorial Brutalista)
 const colors = {
-  primary: '#f6c94d',      // Amarillo mostaza - botón principal (Reproducir)
-  secondary: '#105666',    // Azul petróleo - botones de acción
-  accent: '#f7f4d5',       // Crema suave - fondos suaves
-  dark: '#0a3323',         // Verde muy oscuro - botón cerrar sesión
-  success: '#839958',      // Verde oliva - botón agregar
-  danger: '#d3968c',       // Rosa salmón - botón cancelar/quitar favoritos
-  pink: '#d3968c',         // Rosa salmón - botón favoritos
-  disabled: '#9aa0a6',     // Gris - deshabilitado
-  textOnPrimary: '#0a3323', // Texto sobre amarillo
+  primary: '#000000',      // Negro puro para iniciar y cerrar sesión
+  secondary: '#105666',    // Azul petróleo
+  accent: '#f7f4d5',       // Crema suave para fondos
+  dark: '#000000',         // Negro puro para tipografía y bordes
+  success: '#0a3323',      // Verde muy oscuro
+  danger: '#e63946',       // Rojo vibrante para cancelar/eliminar
+  pink: '#0047AB',         // Azul Cobalto para qué es un FF y play
+  disabled: '#cccccc',     // Gris sólido
+  textOnPrimary: '#f7f4d5',// Crema sobre oscuro
 }
 
 const darkColors = {
-  primary: '#f6c94d',
+  primary: '#f7f4d5',       // Crema
   secondary: '#2c7a7b',
   accent: '#1a365d',
-  dark: '#e2e8f0',
-  success: '#48bb78',
-  danger: '#f56565',
-  pink: '#ed64a6',
+  dark: '#ffffff',
+  success: '#38a169',       // Verde claro para éxito en dark mode
+  danger: '#e63946',
+  pink: '#0047AB',
   disabled: '#4a5568',
-  textOnPrimary: '#0a3323',
+  textOnPrimary: '#000000', // Negro sobre crema
   background: '#1a202c',
   cardBackground: '#2d3748',
   text: '#f7fafc',
@@ -216,7 +216,7 @@ const translations = {
     debeRegistrarse: 'User does not exist. You must register first.',
     queEsFashionFilm: 'What is a Fashion Film?',
     infoFashionFilm: 'A fashion film is a short audiovisual creation linked to a fashion label, designer, or brand, where clothing and aesthetics are at the core of the visual and symbolic meaning. Its goal is to communicate a brand\'s identity, values, and stylistic and symbolic universe through an artistic or experimental narrative, rather than through the direct promotion of a product.\n' +
-        'More info and downloadable PDF at:',
+      'More info and downloadable PDF at:',
     enlaceMasInfo: 'https://polired.upm.es/index.php/ardin/article/view/5432',
     verComentarios: 'View comments',
     anadirComentario: 'Add comment',
@@ -270,6 +270,7 @@ export default function LoginPage() {
   )
 
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [hasPlayed, setHasPlayed] = useState(false)
   const embedUrl = useMemo(() => {
     const link = selectedFilm?.link
     return link ? toEmbedUrl(link) : null
@@ -379,7 +380,7 @@ export default function LoginPage() {
 
     // Validaciones
 
-     // Validación de clave
+    // Validación de clave
     const passwordTrimmed = password.trim();
     const passwordLower = passwordTrimmed.toLowerCase();
 
@@ -494,6 +495,7 @@ export default function LoginPage() {
     setSelectedFilmId(null)
     setErrorFilms('')
     setIsModalOpen(false)
+    setHasPlayed(false)
     setViendoFavoritos(false)
     setFavoritoSeleccionado(false)
   }
@@ -560,25 +562,15 @@ export default function LoginPage() {
     )
   }
 
-  const onClickReproducir = async () => {
+  const handlePlayVideo = async () => {
     if (!selectedFilm) return
     if (!usuarioId) {
       setMensaje(t.noUsuarioId)
       return
     }
-    if (!selectedFilm.link) {
-      setMensaje(t.noLink)
-      return
-    }
-    const url = toEmbedUrl(selectedFilm.link)
-    if (!url) {
-      setMensaje(t.linkInvalido)
-      return
-    }
-
+    setHasPlayed(true)
     await incrementarVisualizaciones(selectedFilm)
     await upsertAccionUsuario({ filmId: selectedFilm.film_id, visualizado: true })
-    setIsModalOpen(true)
   }
 
   const onClickFavorito = async () => {
@@ -738,7 +730,7 @@ export default function LoginPage() {
         film_id: selectedFilm.film_id,
         comentario: nuevoComentarioTexto.trim()
       }])
-    
+
     if (error) {
       setMensaje(t.errorComentarios + error.message)
     } else {
@@ -835,38 +827,6 @@ export default function LoginPage() {
             </button>
 
             <button
-              onClick={onClickReproducir}
-              style={{
-                ...buttonStyle,
-                backgroundColor: selectedFilm && embedUrl ? theme.primary : theme.disabled,
-                color: selectedFilm && embedUrl ? theme.textOnPrimary : 'white',
-                cursor: selectedFilm && embedUrl ? 'pointer' : 'not-allowed',
-                width: isMobile ? '100%' : 'auto',
-                paddingInline: 16,
-              }}
-              disabled={!selectedFilm || !embedUrl}
-              type="button"
-            >
-              {t.reproducir}
-            </button>
-
-            <button
-              onClick={onClickFavorito}
-              style={{
-                ...buttonStyle,
-                backgroundColor: selectedFilm ? (favoritoSeleccionado ? theme.danger : theme.secondary) : theme.disabled,
-                cursor: selectedFilm ? 'pointer' : 'not-allowed',
-                width: isMobile ? '100%' : 'auto',
-                paddingInline: 16,
-                color: 'white',
-              }}
-              disabled={!selectedFilm}
-              type="button"
-            >
-              {favoritoSeleccionado ? t.quitarFavorito : t.marcarFavorito}
-            </button>
-
-            <button
               onClick={async () => {
                 const next = !viendoFavoritos
                 setViendoFavoritos(next)
@@ -878,38 +838,6 @@ export default function LoginPage() {
               type="button"
             >
               {viendoFavoritos ? t.volverTodos : t.verFavoritos}
-            </button>
-
-            <button
-              onClick={() => setIsAddComentarioModalOpen(true)}
-              style={{
-                ...buttonStyle,
-                backgroundColor: selectedFilm ? theme.success : theme.disabled,
-                cursor: selectedFilm ? 'pointer' : 'not-allowed',
-                width: isMobile ? '100%' : 'auto',
-                paddingInline: 16,
-                color: 'white',
-              }}
-              disabled={!selectedFilm}
-              type="button"
-            >
-              {t.anadirComentario}
-            </button>
-
-            <button
-              onClick={abrirComentarios}
-              style={{
-                ...buttonStyle,
-                backgroundColor: selectedFilm ? theme.primary : theme.disabled,
-                color: selectedFilm ? theme.textOnPrimary : 'white',
-                cursor: selectedFilm ? 'pointer' : 'not-allowed',
-                width: isMobile ? '100%' : 'auto',
-                paddingInline: 16,
-              }}
-              disabled={!selectedFilm}
-              type="button"
-            >
-              {t.verComentarios}
             </button>
 
             <button
@@ -1116,12 +1044,14 @@ export default function LoginPage() {
                           if (isMobile) {
                             setExpandedRowId(expandedRowId === f.film_id ? null : f.film_id)
                           }
+                          setIsModalOpen(true)
+                          setHasPlayed(false)
                         }}
                         style={{
                           background: isSelected ? (isDarkMode ? '#3e4a5b' : '#eef5ff') : 'transparent',
                           cursor: 'pointer',
                         }}
-                        title={f.link ? 'Selecciona para activar Reproducir' : 'Sin link'}
+                        title={f.link ? 'Haz clic para abrir el reproductor' : 'Sin link'}
                       >
                         <td style={{ ...tdStyle, borderBottomColor: theme.border, color: theme.text }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1163,8 +1093,8 @@ export default function LoginPage() {
                       {busqueda.trim()
                         ? t.noResultados
                         : viendoFavoritos
-                        ? t.noFavoritos
-                        : t.noRegistros}
+                          ? t.noFavoritos
+                          : t.noRegistros}
                     </td>
                   </tr>
                 )}
@@ -1192,8 +1122,39 @@ export default function LoginPage() {
               <div style={{ marginTop: 12 }}>
                 {embedUrl ? (
                   <div style={{ position: 'relative', paddingTop: '56.25%' }}>
+                    {!hasPlayed && (
+                      <div
+                        onClick={handlePlayVideo}
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          backgroundColor: 'rgba(0,0,0,0.6)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 10,
+                          cursor: 'pointer',
+                          borderRadius: 10
+                        }}
+                      >
+                        <div style={{
+                          width: '60px',
+                          height: '60px',
+                          backgroundColor: theme.pink,
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white',
+                          fontSize: '24px',
+                          paddingLeft: '5px'
+                        }}>
+                          ▶
+                        </div>
+                      </div>
+                    )}
                     <iframe
-                      src={embedUrl}
+                      src={hasPlayed ? embedUrl + (embedUrl.includes('?') ? '&autoplay=1' : '?autoplay=1') : embedUrl}
                       title={selectedFilm?.titulo ?? 'Video'}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
@@ -1210,13 +1171,58 @@ export default function LoginPage() {
                 ) : (
                   <p>{t.noEmbed}</p>
                 )}
-                
+
                 {selectedFilm?.sinopsis && (
                   <div style={{ marginTop: 16, fontSize: '14px', lineHeight: '1.6', color: isDarkMode ? '#cbd5e0' : '#4a5568' }}>
                     <strong>{t.sinopsis}:</strong>
                     <p style={{ marginTop: 8, whiteSpace: 'pre-wrap' }}>{selectedFilm.sinopsis}</p>
                   </div>
                 )}
+
+                <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <button
+                    onClick={onClickFavorito}
+                    style={{
+                      ...buttonStyle,
+                      backgroundColor: favoritoSeleccionado ? theme.danger : theme.secondary,
+                      width: 'auto',
+                      paddingInline: 16,
+                      color: 'white',
+                    }}
+                    type="button"
+                  >
+                    {favoritoSeleccionado ? t.quitarFavorito : t.marcarFavorito}
+                  </button>
+
+
+                  <button
+                    onClick={() => setIsAddComentarioModalOpen(true)}
+                    style={{
+                      ...buttonStyle,
+                      backgroundColor: theme.success,
+                      width: 'auto',
+                      paddingInline: 16,
+                      color: 'white',
+                    }}
+                    type="button"
+                  >
+                    {t.anadirComentario}
+                  </button>
+
+                  <button
+                    onClick={abrirComentarios}
+                    style={{
+                      ...buttonStyle,
+                      backgroundColor: theme.primary,
+                      color: theme.textOnPrimary,
+                      width: 'auto',
+                      paddingInline: 16,
+                    }}
+                    type="button"
+                  >
+                    {t.verComentarios}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1286,7 +1292,8 @@ export default function LoginPage() {
                   backgroundColor: isDarkMode ? '#4a5568' : 'white',
                   color: theme.text,
                   marginBottom: 16,
-                  resize: 'vertical'
+                  resize: 'vertical',
+                  boxSizing: 'border-box'
                 }}
               />
               <button
@@ -1416,57 +1423,61 @@ export default function LoginPage() {
   )
 }
 
-// Estilos
+// Estilos Editorial Brutalista
 const cardStyle = {
   background: 'white',
   padding: '30px',
-  borderRadius: '12px',
-  boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+  borderRadius: '0px',
+  border: '2px solid #000',
+  boxShadow: 'none',
   width: '350px',
 }
 
-const labelStyle = { display: 'block', fontSize: '14px', color: '#666', marginBottom: '5px' }
+const labelStyle = { display: 'block', fontSize: '14px', color: '#000', marginBottom: '5px', fontWeight: 'bold' as 'bold', textTransform: 'uppercase' as 'uppercase' }
 
 const inputStyle = {
   width: '100%',
-  padding: '10px',
-  borderRadius: '6px',
-  border: '1px solid #ddd',
+  padding: '12px',
+  borderRadius: '0px',
+  border: '2px solid #000',
   boxSizing: 'border-box' as 'border-box',
 }
 
 const buttonStyle = {
   width: '100%',
-  padding: '10px',
-  borderRadius: '6px',
-  border: 'none',
-  backgroundColor: '#0070f3',
+  padding: '12px',
+  borderRadius: '0px',
+  border: '2px solid #000',
+  backgroundColor: '#000',
   color: 'white',
   fontWeight: 'bold' as 'bold',
+  textTransform: 'uppercase' as 'uppercase',
   cursor: 'pointer',
 }
 
 const thStyle: React.CSSProperties = {
   textAlign: 'left',
-  padding: '10px',
-  borderBottom: '1px solid #e5e5e5',
+  padding: '15px 10px',
+  borderBottom: '2px solid #000',
   fontSize: 14,
-  color: '#333',
+  color: '#000',
   whiteSpace: 'nowrap',
+  textTransform: 'uppercase',
+  fontWeight: 'bold',
 }
 
 const tdStyle: React.CSSProperties = {
-  padding: '10px',
-  borderBottom: '1px solid #f0f0f0',
+  padding: '15px 10px',
+  borderBottom: '1px solid #000',
   fontSize: 14,
-  color: '#444',
+  color: '#000',
   whiteSpace: 'nowrap',
 }
 
 const overlayStyle: React.CSSProperties = {
   position: 'fixed',
   inset: 0,
-  background: 'rgba(0,0,0,0.55)',
+  background: 'rgba(0,0,0,0.85)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -1477,7 +1488,8 @@ const overlayStyle: React.CSSProperties = {
 const modalStyle: React.CSSProperties = {
   width: 'min(900px, 95vw)',
   background: 'white',
-  borderRadius: 12,
-  padding: 16,
-  boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+  borderRadius: 0,
+  border: '2px solid #000',
+  padding: 24,
+  boxShadow: 'none',
 }
