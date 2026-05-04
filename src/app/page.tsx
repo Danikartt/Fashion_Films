@@ -288,6 +288,7 @@ export default function LoginPage() {
   const [nuevoMinutos, setNuevoMinutos] = useState('')
   const [nuevoSegundos, setNuevoSegundos] = useState('')
   const [nuevoLink, setNuevoLink] = useState('')
+  const [nuevaSinopsis, setNuevaSinopsis] = useState('')
   const [guardandoFilm, setGuardandoFilm] = useState(false)
 
   const [isComentariosModalOpen, setIsComentariosModalOpen] = useState(false)
@@ -661,6 +662,7 @@ export default function LoginPage() {
     }
 
     if (nuevoLink.trim()) payload.link = nuevoLink.trim()
+    if (nuevaSinopsis.trim()) payload.sinopsis = nuevaSinopsis.trim()
 
     const { data, error } = await supabase
       .from('FashionFilms')
@@ -681,6 +683,7 @@ export default function LoginPage() {
     setNuevoMinutos('')
     setNuevoSegundos('')
     setNuevoLink('')
+    setNuevaSinopsis('')
     setMostrandoFormulario(false)
     setGuardandoFilm(false)
 
@@ -971,6 +974,24 @@ export default function LoginPage() {
                   onChange={(e) => setNuevoLink(e.target.value)}
                   style={{ ...inputStyle, backgroundColor: isDarkMode ? '#4a5568' : 'white', color: theme.text, borderColor: theme.border }}
                   placeholder="Ej: https://www.youtube.com/watch?v=..."
+                  disabled={guardandoFilm}
+                />
+              </div>
+
+              <div>
+                <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.sinopsis}</label>
+                <textarea
+                  value={nuevaSinopsis}
+                  onChange={(e) => setNuevaSinopsis(e.target.value)}
+                  style={{
+                    ...inputStyle,
+                    backgroundColor: isDarkMode ? '#4a5568' : 'white',
+                    color: theme.text,
+                    borderColor: theme.border,
+                    minHeight: '80px',
+                    resize: 'vertical'
+                  }}
+                  placeholder="Ej: Breve descripción del fashion film..."
                   disabled={guardandoFilm}
                 />
               </div>
