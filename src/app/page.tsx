@@ -118,7 +118,7 @@ const translations = {
     regExito: '¡Usuario {username} registrado con éxito!',
     regError: 'Error al registrar: ',
     verificando: 'Verificando...',
-    loginError: 'Usuario o clave incorrectos',
+    loginError: 'Usuario o contraseña incorrectos',
     loginExito: '¡Hola de nuevo, {username}!',
     registrando: 'Registrando usuario...',
     validarClave: 'La clave no es válida. Debe tener al menos 5 caracteres alfanuméricos, sin signos.',
@@ -450,37 +450,31 @@ export default function LoginPage() {
 
     setMensaje(t.verificando)
 
-    // Buscar por nombre primero para identificar con precisión el campo incorrecto
-    const { data: userByName, error: errorByName } = await supabase
-      .from('Usuarios')
-      .select('usuario_id, nombre, clave')
-      .eq('nombre', username)
-      .maybeSingle()
+    // Llamar a la función verificar_login que usa crypt() para comparar contraseñas
+    const { data, error } = await supabase
+      .rpc('verificar_login', {
+        p_nombre: username.trim(),
+        p_clave: password.trim()
+      })
 
-    if (errorByName || !userByName) {
-      // Usuario no existe o error: marcamos usuario como incorrecto y pedimos registro
+    if (error || !data || data.length === 0) {
+      // Login incorrecto: no revelamos cuál campo es erróneo
       setUserError(true)
-      setPassError(false)
-      setMensaje(t.debeRegistrarse)
+      setPassError(true)
+      setMensaje(t.loginError)
       return
     }
 
-    if (userByName.clave !== password) {
-      // Contraseña incorrecta: marcamos clave y explicamos requisitos
-      setUserError(false)
-      setPassError(true)
-      setMensaje(t.validarClave)
-      return
-    }
+    const user = data[0]
 
     // Éxito
     setUserError(false)
     setPassError(false)
-    localStorage.setItem('usuarioLogueado', userByName.nombre)
-    localStorage.setItem('usuarioId', userByName.usuario_id)
+    localStorage.setItem('usuarioLogueado', user.nombre)
+    localStorage.setItem('usuarioId', user.usuario_id)
 
-    setUsuarioId(userByName.usuario_id)
-    setMensaje(t.loginExito.replace('{username}', userByName.nombre))
+    setUsuarioId(user.usuario_id)
+    setMensaje(t.loginExito.replace('{username}', user.nombre))
     setEstaLogueado(true)
   }
 
