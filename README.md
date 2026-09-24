@@ -8,7 +8,7 @@ Aplicación web para explorar y gestionar una base de datos de fashion films —
 
 ## 🛠️ Stack tecnológico
 
-- **Frontend:** Next.js, React, CSS Modules
+- **Frontend:** Next.js, TypeScript, React, CSS Modules
 - **Backend / Base de datos:** Supabase (PostgreSQL)
 - **Autenticación:** Supabase Auth
 - **Despliegue:** Vercel (CD automático desde GitHub)
