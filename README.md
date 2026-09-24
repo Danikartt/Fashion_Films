@@ -1,6 +1,6 @@
 # 🎬 Fashion Films
 
-Aplicación web para explorar y gestionar una base de datos de fashion films — cortometrajes audiovisuales del mundo de la moda.
+Aplicación web para explorar, ver, guardar mediante formulario y gestionar una base de datos de fashion films — cortometrajes audiovisuales del mundo de la moda.
 
 🔗 **Deploy en producción:** [fashion-films.vercel.app](https://fashion-films.vercel.app)
 
@@ -35,7 +35,17 @@ Aplicación web para explorar y gestionar una base de datos de fashion films —
 
 ## 📸 Capturas de pantalla
 
-> *Próximamente*
+> Pantalla de inicio <img width="615" height="583" alt="FF_registro-inicio" src="https://github.com/user-attachments/assets/32228891-5794-47d0-a299-4d8676c08f2f" />
+
+> Pantalla principal <img width="1258" height="785" alt="FF_principal" src="https://github.com/user-attachments/assets/63a6f803-9d2d-4a19-afc6-3594b4787204" />
+
+> Pantalla principal, modo oscuro <img width="1160" height="784" alt="FF_principal_noche" src="https://github.com/user-attachments/assets/7bb679b5-e930-4024-82fe-d4fe2416b38c" />
+
+> Lista de favoritos <img width="1164" height="679" alt="FF_favoritos" src="https://github.com/user-attachments/assets/de43ec60-86db-417d-913f-5d0a26d93f4d" />
+
+> Formulario <img width="1179" height="835" alt="FF_formulario" src="https://github.com/user-attachments/assets/3650825f-a0c2-49d6-a3c1-4ed03760c7de" />
+
+
 
 ---
 
