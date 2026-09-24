@@ -35,7 +35,7 @@ Aplicación web para explorar y gestionar una base de datos de fashion films —
 
 ## 📸 Capturas de pantalla
 
-> Pantalla de inicio <img width="615" height="583" alt="FF_registro-inicio" src="https://github.com/user-attachments/assets/32228891-5794-47d0-a299-4d8676c08f2f" />
+> Pantalla de inicio  <img width="615" height="583" alt="FF_registro-inicio" src="https://github.com/user-attachments/assets/32228891-5794-47d0-a299-4d8676c08f2f" />
 
 > Pantalla principal <img width="1258" height="785" alt="FF_principal" src="https://github.com/user-attachments/assets/63a6f803-9d2d-4a19-afc6-3594b4787204" />
 
