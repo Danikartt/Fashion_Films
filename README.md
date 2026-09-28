@@ -33,6 +33,28 @@ Aplicación web para explorar y gestionar una base de datos de fashion films —
 
 ---
 
+## 🧪 Testing
+
+Cobertura de tests automatizados con **Vitest** + **React Testing Library**, cubriendo lógica de negocio, componentes UI y acceso a datos.
+
+```bash
+ Test Files  5 passed (5)
+      Tests  55 passed (55)
+```
+
+| Capa | Qué se testea | Tests |
+|---|---|---|
+| **Lógica pura** | Validación de credenciales, filtrado/ordenación de films, formateo de datos, integridad de traducciones (ES/EN) | 26 |
+| **Componentes UI** | Renderizado, estados de carga/vacío, interacción de usuario (`FilmCard`, `NewFilmForm`, `CommentsModal`) | 17 |
+| **Acceso a datos** | Consultas y mutaciones contra Supabase mockeado (éxito, error, casos límite) | 12 |
+
+```bash
+npm test            # Ejecuta todos los tests
+npm run test:watch  # Modo watch
+npm run test:coverage  # Informe de cobertura
+```
+---
+
 ## 📸 Capturas de pantalla
 
 > Pantalla de inicio  <img width="615" height="583" alt="FF_registro-inicio" src="https://github.com/user-attachments/assets/32228891-5794-47d0-a299-4d8676c08f2f" />
@@ -44,8 +66,6 @@ Aplicación web para explorar y gestionar una base de datos de fashion films —
 > Lista de favoritos <img width="1164" height="679" alt="FF_favoritos" src="https://github.com/user-attachments/assets/de43ec60-86db-417d-913f-5d0a26d93f4d" />
 
 > Formulario <img width="1179" height="835" alt="FF_formulario" src="https://github.com/user-attachments/assets/3650825f-a0c2-49d6-a3c1-4ed03760c7de" />
-
-
 
 ---
 
