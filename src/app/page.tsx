@@ -1,6 +1,12 @@
 'use client'
+
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { validarClave, validarNombre } from '../lib/utils'
+import NewFilmForm from './components/NewFilmForm'
+import CommentsModal from './components/CommentsModal'
+
+
 
 type FashionFilm = {
   film_id: string
@@ -79,158 +85,8 @@ const darkColors = {
   border: '#4a5568'
 }
 
-const translations = {
-  es: {
-    title: 'Fashion Films',
-    welcome: '¡Hola, {username}!',
-    reproducir: 'Reproducir',
-    quitarFavorito: 'Quitar de favoritos',
-    marcarFavorito: 'Marcar como favorito',
-    volverTodos: 'Volver a todos',
-    verFavoritos: 'Ver mis favoritos',
-    cancelar: 'Cancelar',
-    agregarFilm: 'Agregar Fashion Film',
-    cerrarSesion: 'Cerrar Sesión',
-    nuevoFilm: 'Nuevo Fashion Film',
-    titulo: 'Título',
-    direccion: 'Dirección',
-    anio: 'Año de publicación',
-    duracion: 'Duración (MM:SS)',
-    link: 'Link (YouTube o Vimeo)',
-    guardando: 'Guardando...',
-    guardar: 'Guardar Fashion Film',
-    misFavoritos: 'Mis favoritos',
-    fashionFilms: 'FashionFilms',
-    buscarPlaceholder: 'Buscar por título, dirección, duración o año...',
-    cargandoFavoritos: 'Cargando favoritos...',
-    cargando: 'Cargando...',
-    fechaPub: 'Fecha publicación',
-    noResultados: 'No se encontraron resultados para tu búsqueda.',
-    noFavoritos: 'No tienes favoritos aún.',
-    noRegistros: 'No hay registros para mostrar.',
-    reproduciendo: 'Reproduciendo',
-    cerrar: 'Cerrar',
-    noEmbed: 'No se pudo generar el reproductor para este link.',
-    usuarioLabel: 'Nombre de Usuario',
-    claveLabel: 'Contraseña',
-    iniciarSesion: 'Iniciar Sesión',
-    registrarse: 'Registrarse',
-    regExito: '¡Usuario {username} registrado con éxito!',
-    regError: 'Error al registrar: ',
-    verificando: 'Verificando...',
-    loginError: 'Usuario o contraseña incorrectos',
-    loginExito: '¡Hola de nuevo, {username}!',
-    registrando: 'Registrando usuario...',
-    validarClave: 'La clave no es válida. Debe tener al menos 5 caracteres alfanuméricos, sin signos.',
-    validarNombre: 'El nombre no es válido, no debe tener signos y solo se permiten uno o dos nombres.',
-    noUsuarioId: 'No se encontró usuarioId. Vuelve a iniciar sesión.',
-    noLink: 'Este fashion film no tiene link.',
-    linkInvalido: 'El link no parece ser de YouTube o Vimeo (o no se pudo convertir a embed).',
-    cargandoFilmsError: 'No se pudo cargar FashionFilms: ',
-    consultarAccionError: 'No se pudo consultar AccionUsuario: ',
-    actualizarAccionError: 'No se pudo actualizar AccionUsuario: ',
-    insertarAccionError: 'No se pudo insertar AccionUsuario: ',
-    visualizacionesError: 'No se pudo incrementar visualizaciones: ',
-    cargarFavoritosError: 'No se pudieron cargar favoritos: ',
-    cargarDatosError: 'No se pudieron cargar datos de FashionFilms: ',
-    obligatorioError: 'El título y la dirección son obligatorios.',
-    guardandoMsg: 'Guardando nuevo fashion film...',
-    guardadoExito: '¡Fashion film guardado exitosamente!',
-    guardarError: 'Error al guardar: ',
-    camposVacios: 'Debes completar el nombre de usuario y la contraseña.',
-    debeRegistrarse: 'El usuario no existe. Debes registrarte primero.',
-    queEsFashionFilm: '¿Qué es un Fashion Film?',
-    infoFashionFilm: 'Un fashion film es una creación audiovisual breve vinculada a una firma, diseñador o marca de moda, donde la indumentaria y la estética constituyen el núcleo del significado visual y simbólico. Su objetivo es comunicar identidad, valores y el universo estilístico y simbólico de una marca mediante una narrativa artística o experimental, no mediante la promoción directa de un producto.\n Más info y PDF descargable en:',
-    enlaceMasInfo: 'https://polired.upm.es/index.php/ardin/article/view/5432',
-    verComentarios: 'Ver comentarios',
-    anadirComentario: 'Añadir comentario',
-    escribeComentario: 'Escribe tu comentario...',
-    enviar: 'Enviar',
-    noComentarios: 'Aún no hay comentarios. ¡Sé el primero en comentar!',
-    comentariosDe: 'Comentarios de',
-    cargandoComentarios: 'Cargando comentarios...',
-    errorComentarios: 'Error al cargar comentarios: ',
-    comentarioExito: '¡Comentario añadido!',
-    sinopsis: 'Sinopsis',
-    langBtn: 'EN'
-  },
-  en: {
-    title: 'Fashion Films',
-    welcome: 'Hello, {username}!',
-    reproducir: 'Play',
-    quitarFavorito: 'Remove from favorites',
-    marcarFavorito: 'Mark as favorite',
-    volverTodos: 'Back to all',
-    verFavoritos: 'See my favorites',
-    cancelar: 'Cancel',
-    agregarFilm: 'Add Fashion Film',
-    cerrarSesion: 'Log Out',
-    nuevoFilm: 'New Fashion Film',
-    titulo: 'Title',
-    direccion: 'Direction',
-    anio: 'Release Year',
-    duracion: 'Duration (MM:SS)',
-    link: 'Link (YouTube or Vimeo)',
-    guardando: 'Saving...',
-    guardar: 'Save Fashion Film',
-    misFavoritos: 'My favorites',
-    fashionFilms: 'FashionFilms',
-    buscarPlaceholder: 'Search by title, direction, duration or year...',
-    cargandoFavoritos: 'Loading favorites...',
-    cargando: 'Loading...',
-    fechaPub: 'Release date',
-    noResultados: 'No results found for your search.',
-    noFavoritos: 'You don\'t have favorites yet.',
-    noRegistros: 'No records to show.',
-    reproduciendo: 'Playing',
-    cerrar: 'Close',
-    noEmbed: 'Could not generate player for this link.',
-    usuarioLabel: 'Username',
-    claveLabel: 'Password',
-    iniciarSesion: 'Log In',
-    registrarse: 'Register',
-    regExito: 'User {username} registered successfully!',
-    regError: 'Registration error: ',
-    verificando: 'Verifying...',
-    loginError: 'Incorrect username or password',
-    loginExito: 'Welcome back, {username}!',
-    registrando: 'Registering user...',
-    validarClave: 'The password is invalid. It must have at least 5 alphanumeric characters with no symbols.',
-    validarNombre: 'The username is invalid, must not have signs and only one or two names are allowed.',
-    noUsuarioId: 'User ID not found. Please log in again.',
-    noLink: 'This fashion film has no link.',
-    linkInvalido: 'The link does not seem to be from YouTube or Vimeo (or could not be converted to embed).',
-    cargandoFilmsError: 'Could not load FashionFilms: ',
-    consultarAccionError: 'Could not query AccionUsuario: ',
-    actualizarAccionError: 'Could not update AccionUsuario: ',
-    insertarAccionError: 'Could not insert AccionUsuario: ',
-    statusAccionError: 'Could not update AccionUsuario: ',
-    visualizacionesError: 'Could not increment views: ',
-    cargarFavoritosError: 'Could not load favorites: ',
-    cargarDatosError: 'Could not load FashionFilms data: ',
-    obligatorioError: 'Title and direction are required.',
-    guardandoMsg: 'Saving new fashion film...',
-    guardadoExito: 'Fashion film saved successfully!',
-    guardarError: 'Error saving: ',
-    camposVacios: 'You must fill in the username and password.',
-    debeRegistrarse: 'User does not exist. You must register first.',
-    queEsFashionFilm: 'What is a Fashion Film?',
-    infoFashionFilm: 'A fashion film is a short audiovisual creation linked to a fashion label, designer, or brand, where clothing and aesthetics are at the core of the visual and symbolic meaning. Its goal is to communicate a brand\'s identity, values, and stylistic and symbolic universe through an artistic or experimental narrative, rather than through the direct promotion of a product.\n' +
-      'More info and downloadable PDF at:',
-    enlaceMasInfo: 'https://polired.upm.es/index.php/ardin/article/view/5432',
-    verComentarios: 'View comments',
-    anadirComentario: 'Add comment',
-    escribeComentario: 'Write your comment...',
-    enviar: 'Send',
-    noComentarios: 'No comments yet. Be the first to comment!',
-    comentariosDe: 'Comments on',
-    cargandoComentarios: 'Loading comments...',
-    errorComentarios: 'Error loading comments: ',
-    comentarioExito: 'Comment added!',
-    sinopsis: 'Synopsis',
-    langBtn: 'ES'
-  }
-}
+import { translations } from '../lib/translations'
+
 
 export default function LoginPage() {
   const [language, setLanguage] = useState<'es' | 'en'>('es')
@@ -380,38 +236,13 @@ export default function LoginPage() {
     }
 
     // Validaciones
-
-    // Validación de clave
-    const passwordTrimmed = password.trim();
-    const passwordLower = passwordTrimmed.toLowerCase();
-
-    //No permitir "admin" en la clave
-    if (passwordLower.includes('admin')) {
-      setMensaje(t.validarClave);
-      setPassError(true)
-      return
-    }
-    // Mínimo 5 caracteres, números y letras sin signos
-    const regexClave = /^[a-zA-Z0-9]{5,}$/
-    if (!regexClave.test(passwordTrimmed)) {
+    if (!validarClave(password)) {
       setMensaje(t.validarClave)
       setPassError(true)
       return
     }
 
-    // Validación de nombre de usuario
-    const usernameTrimmed = username.trim();
-    const usernameLower = usernameTrimmed.toLowerCase();
-
-    // Nombre de usuario: no "admin", no signos, solo uno o dos nombres (letras)
-    if (usernameLower.includes('admin')) {
-      setMensaje(t.validarNombre)
-      setUserError(true)
-      return
-    }
-    // Permite uno o dos nombres, solo letras (incluyendo ñ y tildes), separados por un espacio opcional
-    const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+( [a-zA-ZáéíóúÁÉÍÓÚñÑ]+)?$/
-    if (!regexNombre.test(usernameTrimmed)) {
+    if (!validarNombre(username)) {
       setMensaje(t.validarNombre)
       setUserError(true)
       return
@@ -885,126 +716,27 @@ export default function LoginPage() {
         )}
 
         {mostrandoFormulario && (
-          <div style={{
-            background: theme.accent,
-            padding: 20,
-            borderRadius: 8,
-            marginBottom: 20,
-            border: `2px solid ${theme.primary}`
-          }}>
-            <h3 style={{ margin: '0 0 16px', fontFamily: 'Century Gothic, sans-serif', color: isDarkMode ? 'white' : theme.dark }}>
-              {t.nuevoFilm}
-            </h3>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.titulo} *</label>
-                <input
-                  type="text"
-                  value={nuevoTitulo}
-                  onChange={(e) => setNuevoTitulo(e.target.value)}
-                  style={{ ...inputStyle, backgroundColor: isDarkMode ? '#4a5568' : 'white', color: theme.text, borderColor: theme.border }}
-                  placeholder="Ej: Fashion Film 2024"
-                  disabled={guardandoFilm}
-                />
-              </div>
-
-              <div>
-                <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.direccion} *</label>
-                <input
-                  type="text"
-                  value={nuevaDireccion}
-                  onChange={(e) => setNuevaDireccion(e.target.value)}
-                  style={{ ...inputStyle, backgroundColor: isDarkMode ? '#4a5568' : 'white', color: theme.text, borderColor: theme.border }}
-                  placeholder="Ej: John Doe"
-                  disabled={guardandoFilm}
-                />
-              </div>
-
-              <div>
-                <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.anio}</label>
-                <input
-                  type="text"
-                  value={nuevoAnio}
-                  onChange={(e) => setNuevoAnio(e.target.value)}
-                  style={{ ...inputStyle, backgroundColor: isDarkMode ? '#4a5568' : 'white', color: theme.text, borderColor: theme.border }}
-                  placeholder="Ej: 2024"
-                  disabled={guardandoFilm}
-                />
-              </div>
-
-              <div>
-                <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.duracion}</label>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={nuevoMinutos}
-                    onChange={(e) => setNuevoMinutos(e.target.value)}
-                    style={{ ...inputStyle, width: '80px', backgroundColor: isDarkMode ? '#4a5568' : 'white', color: theme.text, borderColor: theme.border }}
-                    placeholder="MM"
-                    disabled={guardandoFilm}
-                  />
-                  <span style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}>:</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={nuevoSegundos}
-                    onChange={(e) => setNuevoSegundos(e.target.value)}
-                    style={{ ...inputStyle, width: '80px', backgroundColor: isDarkMode ? '#4a5568' : 'white', color: theme.text, borderColor: theme.border }}
-                    placeholder="SS"
-                    disabled={guardandoFilm}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.link}</label>
-                <input
-                  type="url"
-                  value={nuevoLink}
-                  onChange={(e) => setNuevoLink(e.target.value)}
-                  style={{ ...inputStyle, backgroundColor: isDarkMode ? '#4a5568' : 'white', color: theme.text, borderColor: theme.border }}
-                  placeholder="Ej: https://www.youtube.com/watch?v=..."
-                  disabled={guardandoFilm}
-                />
-              </div>
-
-              <div>
-                <label style={{ ...labelStyle, color: isDarkMode ? '#cbd5e0' : '#666' }}>{t.sinopsis}</label>
-                <textarea
-                  value={nuevaSinopsis}
-                  onChange={(e) => setNuevaSinopsis(e.target.value)}
-                  style={{
-                    ...inputStyle,
-                    backgroundColor: isDarkMode ? '#4a5568' : 'white',
-                    color: theme.text,
-                    borderColor: theme.border,
-                    minHeight: '80px',
-                    resize: 'vertical'
-                  }}
-                  placeholder="Ej: Breve descripción del fashion film..."
-                  disabled={guardandoFilm}
-                />
-              </div>
-
-              <button
-                onClick={guardarNuevoFilm}
-                style={{
-                  ...buttonStyle,
-                  backgroundColor: guardandoFilm ? theme.disabled : theme.success,
-                  cursor: guardandoFilm ? 'not-allowed' : 'pointer',
-                  color: 'white'
-                }}
-                disabled={guardandoFilm}
-                type="button"
-              >
-                {guardandoFilm ? t.guardando : t.guardar}
-              </button>
-            </div>
-          </div>
+          <NewFilmForm
+            nuevoTitulo={nuevoTitulo}
+            setNuevoTitulo={setNuevoTitulo}
+            nuevaDireccion={nuevaDireccion}
+            setNuevaDireccion={setNuevaDireccion}
+            nuevoAnio={nuevoAnio}
+            setNuevoAnio={setNuevoAnio}
+            nuevoMinutos={nuevoMinutos}
+            setNuevoMinutos={setNuevoMinutos}
+            nuevoSegundos={nuevoSegundos}
+            setNuevoSegundos={setNuevoSegundos}
+            nuevoLink={nuevoLink}
+            setNuevoLink={setNuevoLink}
+            nuevaSinopsis={nuevaSinopsis}
+            setNuevaSinopsis={setNuevaSinopsis}
+            guardandoFilm={guardandoFilm}
+            onSave={guardarNuevoFilm}
+            t={t}
+            theme={theme}
+            isDarkMode={isDarkMode}
+          />
         )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', marginBottom: 12, flexDirection: isMobile ? 'column' : 'row', gap: 10 }}>
@@ -1243,41 +975,16 @@ export default function LoginPage() {
           </div>
         )}
 
-        {isComentariosModalOpen && (
-          <div style={overlayStyle} onClick={() => setIsComentariosModalOpen(false)}>
-            <div style={{ ...modalStyle, backgroundColor: theme.cardBackground, color: theme.text, maxHeight: '80vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
-                <h3 style={{ margin: 0, fontFamily: 'Century Gothic, sans-serif', color: isDarkMode ? 'white' : theme.dark }}>
-                  {t.comentariosDe} {selectedFilm?.titulo}
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setIsComentariosModalOpen(false)}
-                  style={{ ...buttonStyle, width: 'auto', paddingInline: 12, backgroundColor: theme.dark, color: isDarkMode ? '#1a202c' : 'white' }}
-                >
-                  {t.cerrar}
-                </button>
-              </div>
-              {cargandoComentarios ? (
-                <p>{t.cargandoComentarios}</p>
-              ) : comentariosList.length === 0 ? (
-                <p>{t.noComentarios}</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {comentariosList.map((c) => (
-                    <div key={c.id} style={{ padding: 12, backgroundColor: isDarkMode ? '#4a5568' : '#f7f4d5', borderRadius: 8 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '0.85rem', color: isDarkMode ? '#cbd5e0' : '#555' }}>
-                        <strong>{c.Usuarios?.nombre || 'Usuario'}</strong>
-                        <span>{new Date(c.fecha_comentario).toLocaleString()}</span>
-                      </div>
-                      <p style={{ margin: 0 }}>{c.comentario}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        <CommentsModal
+          isOpen={isComentariosModalOpen}
+          filmTitle={selectedFilm?.titulo}
+          commentsList={comentariosList}
+          loading={cargandoComentarios}
+          onClose={() => setIsComentariosModalOpen(false)}
+          t={t}
+          theme={theme}
+          isDarkMode={isDarkMode}
+        />
 
         {isAddComentarioModalOpen && (
           <div style={overlayStyle} onClick={() => setIsAddComentarioModalOpen(false)}>
