@@ -2,6 +2,8 @@
 
 Aplicación web para explorar y gestionar una base de datos de fashion films — cortometrajes audiovisuales del mundo de la moda.
 
+Este catálogo en línea se desarrolla basándose en las creaciones auidovisuales seleccionadas en el Madrid Fashion Film Festival (2013-2018).
+
 🔗 **Deploy en producción:** [fashion-films.vercel.app](https://fashion-films.vercel.app)
 
 ---
