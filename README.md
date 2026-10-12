@@ -29,7 +29,7 @@ Este catálogo en línea se desarrolla basándose en las creaciones auidovisuale
 
 ## 🗄️ Base de datos
 
-- Más de **120 registros** importados y limpiados desde Excel
+- **154 registros** importados y limpiados desde Excel
 - Limpieza y normalización de datos con funciones regex directamente en PostgreSQL
 - Diseño relacional con control de acceso por roles (RLS)
 
