@@ -20,7 +20,7 @@ Este catálogo en línea se desarrolla basándose en las creaciones auidovisuale
 ## ✨ Funcionalidades
 
 - Autenticación de usuarios (registro e inicio de sesión)
-- Exploración de más de 120 fashion films con datos limpios y normalizados
+- Exploración de 154 fashion films con datos limpios y normalizados
 - Tabla responsive con filas expandibles en móvil
 - Filtrado y búsqueda de contenido
 - Seguridad a nivel de fila (Row Level Security) configurada en Supabase
